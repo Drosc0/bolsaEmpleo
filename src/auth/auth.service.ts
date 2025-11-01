@@ -73,11 +73,25 @@ export class AuthService {
   }
 
   // Utilidad para la estrategia JWT: buscar usuario por ID
-  async validateUser(userId: number): Promise<User> {
-    const user = await this.usersRepository.findOneBy({ id: userId });
+  async validateUser(email: string, password: string): Promise<User | null> {
+    // 1. Buscar el usuario por email
+    const user = await this.usersRepository.findOne({ where: { email } });
+
     if (!user) {
-      throw new UnauthorizedException();
+      return null; // Usuario no encontrado
     }
-    return user;
+
+    // 2. Comparar la contraseña hasheada (usando bcrypt, etc.)
+    const isPasswordValid = await bcrypt.compare(password, user.password); // Asumo bcrypt
+
+    if (!isPasswordValid) {
+      return null; // Contraseña incorrecta
+    }
+
+    // 3. Si es válido, devolver el usuario (sin el hash de la contraseña)
+    // Usar una copia del objeto o seleccionar solo las propiedades necesarias
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...result } = user;
+    return result as User;
   }
 }
