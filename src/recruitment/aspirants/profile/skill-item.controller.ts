@@ -1,7 +1,6 @@
 import {
   Controller,
   Post,
-  Get,
   Put,
   Delete,
   Body,
@@ -15,7 +14,7 @@ import {
 import { Request } from 'express';
 
 import { SkillItemService } from './skill-item.service';
-import { CreateSkillItemDto, UpdateSkillItemDto } from '../dto/skill-item.dto';
+import { CreateSkillItemDto, UpdateSkillItemDto } from '../dto/skill-item.dto'; // Asumimos estos DTOs
 import { SkillItem } from '../entities/skill-item.entity';
 
 // Autenticación y Roles
@@ -27,72 +26,59 @@ import { UserRole } from 'src/auth/entities/user.entity';
 // Interfaz para tipar el objeto de solicitud con el usuario adjunto
 interface CustomRequest extends Request {
   user: {
-    id: number; // ID del usuario autenticado
+    id: number;
     role: UserRole;
   };
 }
 
 @Controller('recruitment/aspirants/skills')
-@UseGuards(JwtAuthGuard, RolesGuard) // Aplicar guardias
-@Roles(UserRole.ASPIRANTE) // Restringir solo a aspirantes
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ASPIRANTE) // Solo aspirantes pueden gestionar sus habilidades
 export class SkillItemController {
+  // El inyector del constructor asegura que el tipo sea explícito
   constructor(private readonly skillItemService: SkillItemService) {}
-
-  // =========================================================================
-  // CRUD (CREATE & READ)
-  // =========================================================================
 
   /**
    * POST /api/recruitment/aspirants/skills
-   * Agrega una nueva habilidad al perfil del aspirante autenticado.
+   * Añade una nueva habilidad al perfil del aspirante.
    */
   @Post()
-  create(
+  @HttpCode(HttpStatus.CREATED)
+  async create(
     @Req() req: CustomRequest,
-    @Body() createSkillItemDto: CreateSkillItemDto,
+    @Body() createSkillDto: CreateSkillItemDto,
   ): Promise<SkillItem> {
+    // ⬅️ Tipo de retorno explícito
     const userId = req.user.id;
-    return this.skillItemService.create(userId, createSkillItemDto);
+    return this.skillItemService.create(userId, createSkillDto);
   }
-
-  /**
-   * GET /api/recruitment/aspirants/skills
-   * Obtiene todas las habilidades del aspirante autenticado.
-   */
-  @Get()
-  findAllByAspirant(@Req() req: CustomRequest): Promise<SkillItem[]> {
-    const userId = req.user.id;
-    return this.skillItemService.findAllByAspirant(userId);
-  }
-
-  // =========================================================================
-  // CRUD (UPDATE & DELETE)
-  // =========================================================================
 
   /**
    * PUT /api/recruitment/aspirants/skills/:id
-   * Actualiza una habilidad específica, verificando la propiedad.
+   * Actualiza una habilidad específica por ID.
    */
   @Put(':id')
-  update(
+  async update(
     @Req() req: CustomRequest,
     @Param('id', ParseIntPipe) skillId: number,
-    @Body() updateSkillItemDto: UpdateSkillItemDto,
+    @Body() updateSkillDto: UpdateSkillItemDto,
   ): Promise<SkillItem> {
+    // ⬅️ Tipo de retorno explícito
     const userId = req.user.id;
-    return this.skillItemService.update(userId, skillId, updateSkillItemDto);
+    return this.skillItemService.update(userId, skillId, updateSkillDto);
   }
 
   /**
    * DELETE /api/recruitment/aspirants/skills/:id
-   * Elimina una habilidad específica, verificando la propiedad.
+   * Elimina una habilidad específica por ID.
    */
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT) // Retornar 204 No Content en caso de éxito
-  remove(
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(
     @Req() req: CustomRequest,
     @Param('id', ParseIntPipe) skillId: number,
   ): Promise<void> {
+    // ⬅️ Tipo de retorno explícito
     const userId = req.user.id;
     return this.skillItemService.remove(userId, skillId);
   }

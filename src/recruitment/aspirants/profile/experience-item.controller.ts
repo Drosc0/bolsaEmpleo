@@ -36,13 +36,13 @@ interface CustomRequest extends Request {
 }
 
 @Controller('recruitment/aspirants/experience')
-@UseGuards(JwtAuthGuard, RolesGuard) // Aplicar guardias
+@UseGuards(JwtAuthGuard, RolesGuard) // Aplicar guardias de autenticación y roles
 @Roles(UserRole.ASPIRANTE) // Restringir solo a aspirantes
 export class ExperienceItemController {
   constructor(private readonly experienceItemService: ExperienceItemService) {}
 
   // =========================================================================
-  // 1. CREAR Y LEER
+  // 1. CREAR
   // =========================================================================
 
   /**
@@ -50,7 +50,7 @@ export class ExperienceItemController {
    * Agrega un nuevo registro de experiencia al perfil del aspirante autenticado.
    */
   @Post()
-  create(
+  async create(
     @Req() req: CustomRequest,
     @Body() createExperienceItemDto: CreateExperienceItemDto,
   ): Promise<ExperienceItem> {
@@ -58,18 +58,24 @@ export class ExperienceItemController {
     return this.experienceItemService.create(userId, createExperienceItemDto);
   }
 
+  // =========================================================================
+  // 2. LEER
+  // =========================================================================
+
   /**
    * GET /api/recruitment/aspirants/experience
    * Obtiene toda la experiencia laboral del aspirante autenticado.
    */
   @Get()
-  findAllByAspirant(@Req() req: CustomRequest): Promise<ExperienceItem[]> {
+  async findAllByAspirant(
+    @Req() req: CustomRequest,
+  ): Promise<ExperienceItem[]> {
     const userId = req.user.id;
     return this.experienceItemService.findAllByAspirant(userId);
   }
 
   // =========================================================================
-  // 2. ACTUALIZAR Y ELIMINAR
+  // 3. ACTUALIZAR Y ELIMINAR
   // =========================================================================
 
   /**
@@ -77,7 +83,7 @@ export class ExperienceItemController {
    * Actualiza un registro de experiencia específico, verificando la propiedad.
    */
   @Put(':id')
-  update(
+  async update(
     @Req() req: CustomRequest,
     @Param('id', ParseIntPipe) experienceId: number,
     @Body() updateExperienceItemDto: UpdateExperienceItemDto,
@@ -95,8 +101,8 @@ export class ExperienceItemController {
    * Elimina un registro de experiencia específico, verificando la propiedad.
    */
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT) // Retornar 204 No Content en caso de éxito
-  remove(
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(
     @Req() req: CustomRequest,
     @Param('id', ParseIntPipe) experienceId: number,
   ): Promise<void> {

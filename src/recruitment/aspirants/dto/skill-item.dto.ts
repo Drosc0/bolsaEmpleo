@@ -1,22 +1,30 @@
-import { IsString, IsNotEmpty, IsEnum } from 'class-validator';
-import { SkillLevel } from '../entities/skill-item.entity'; // Asegúrate de que la ruta sea correcta
+import { IsString, IsNotEmpty, IsInt, Min, Max } from 'class-validator';
+import { Type } from 'class-transformer';
 import { PartialType } from '@nestjs/mapped-types';
 
-// DTO para crear una nueva habilidad (todos los campos son requeridos)
-export class CreateSkillItemDto {
+// La definición base de la habilidad (tomada de tu profile.dto)
+export class BaseSkillItemDto {
   @IsNotEmpty()
   @IsString()
-  skillName: string;
+  name: string;
+
+  // Tu entidad SkillItem no tiene 'category', pero lo mantengo aquí por si lo agregas.
+  @IsNotEmpty()
+  @IsString()
+  category: string;
 
   @IsNotEmpty()
-  @IsEnum(SkillLevel, {
-    message: `El nivel debe ser uno de: ${Object.values(SkillLevel).join(', ')}`,
-  })
-  level: SkillLevel;
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  @Type(() => Number)
+  level: number;
 }
 
-// DTO para actualizar una habilidad (todos los campos son opcionales)
-// Usamos PartialType para heredar y hacer los campos opcionales
-export class UpdateSkillItemDto extends PartialType(CreateSkillItemDto) {
-  // No necesitamos redefinir nada aquí, PartialType hace todo el trabajo
+// DTO para Crear una Habilidad (todos los campos son obligatorios)
+export class CreateSkillItemDto extends BaseSkillItemDto {}
+
+// DTO para Actualizar una Habilidad (todos los campos son opcionales)
+export class UpdateSkillItemDto extends PartialType(BaseSkillItemDto) {
+  // Nota: PartialType hace que 'name', 'category', y 'level' sean opcionales.
 }

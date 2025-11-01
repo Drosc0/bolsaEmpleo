@@ -47,7 +47,10 @@ export class SkillItemService {
       });
 
       return this.skillRepository.save(newSkill);
-    } catch (error) {
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error al guardar la habilidad:', error.message);
+      }
       throw new InternalServerErrorException('Error al guardar la habilidad.');
     }
   }
@@ -85,7 +88,10 @@ export class SkillItemService {
 
     try {
       return this.skillRepository.save(skill);
-    } catch (error) {
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error al actualizar la habilidad:', error.message);
+      }
       throw new InternalServerErrorException(
         'Error al actualizar la habilidad.',
       );

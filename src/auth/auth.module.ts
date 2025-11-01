@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 import { User } from './entities/user.entity';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';

@@ -12,7 +12,7 @@ import { ProfileService } from './profile.service';
 import {
   CreateExperienceItemDto,
   UpdateExperienceItemDto,
-} from '../dto/experience-item.dto'; // Asumimos estos DTOs
+} from '../dto/experience-item.dto';
 
 @Injectable()
 export class ExperienceItemService {
@@ -21,6 +21,43 @@ export class ExperienceItemService {
     private experienceRepository: Repository<ExperienceItem>,
     private profileService: ProfileService,
   ) {}
+
+  // =========================================================================
+  // ✅ MÉTODO AÑADIDO
+  // =========================================================================
+
+  /**
+   * Encuentra todos los registros de experiencia laboral para un usuario dado.
+   */
+  async findAllByAspirant(userId: number): Promise<ExperienceItem[]> {
+    const profile = await this.profileService.findByUserId(userId);
+    if (!profile) {
+      // Si no hay perfil base, no hay experiencia que buscar.
+      return [];
+    }
+
+    try {
+      // Buscamos todas las experiencias que tengan el ID del perfil asociado
+      return await this.experienceRepository.find({
+        where: { profileId: profile.id },
+        order: { startDate: 'DESC' }, // Opcional: ordenar por fecha de inicio
+      });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(
+          'Error al buscar experiencias por aspirante:',
+          error.message,
+        );
+      }
+      throw new InternalServerErrorException(
+        'Error al obtener la lista de experiencias.',
+      );
+    }
+  }
+
+  // =========================================================================
+  // MÉTODOS EXISTENTES (create, update, remove)
+  // =========================================================================
 
   /**
    * Crea un ítem de experiencia laboral para el perfil del usuario.
@@ -41,7 +78,13 @@ export class ExperienceItemService {
       });
 
       return this.experienceRepository.save(newExperience);
-    } catch (error) {
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(
+          'Error al guardar la experiencia laboral:',
+          error.message,
+        );
+      }
       throw new InternalServerErrorException(
         'Error al guardar la experiencia laboral.',
       );
@@ -65,7 +108,6 @@ export class ExperienceItemService {
       throw new NotFoundException('Experiencia laboral no encontrada.');
     }
 
-    // Asegura que la experiencia pertenece al usuario autenticado
     if (experience.profile.userId !== userId) {
       throw new ForbiddenException(
         'No tienes permiso para modificar esta experiencia.',
@@ -76,7 +118,13 @@ export class ExperienceItemService {
 
     try {
       return this.experienceRepository.save(experience);
-    } catch (error) {
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(
+          'Error al actualizar la experiencia laboral:',
+          error.message,
+        );
+      }
       throw new InternalServerErrorException(
         'Error al actualizar la experiencia laboral.',
       );
@@ -102,6 +150,18 @@ export class ExperienceItemService {
       );
     }
 
-    await this.experienceRepository.delete(experienceId);
+    try {
+      await this.experienceRepository.delete(experienceId);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(
+          'Error al eliminar la experiencia laboral:',
+          error.message,
+        );
+      }
+      throw new InternalServerErrorException(
+        'Error al eliminar la experiencia laboral.',
+      );
+    }
   }
 }
