@@ -30,6 +30,7 @@ export class ApplicationsService {
   /**
    * Crea una nueva postulación para un aspirante.
    */
+
   async createApplication(
     userId: number,
     jobOfferId: number,
@@ -53,10 +54,10 @@ export class ApplicationsService {
         throw new NotFoundException('La oferta de trabajo no existe.');
       }
 
-      // 3. Verificar Postulación Duplicada (USO CORRECTO DE QUERYBUILDER)
+      // 3. Verificar Postulación Duplicada
       const existingApplication = await this.applicationRepository
         .createQueryBuilder('app')
-        .innerJoin('app.aspirant', 'aspirant')
+        .innerJoin('app.aspirantProfile', 'aspirant')
         .innerJoin('app.jobOffer', 'offer')
         .where('aspirant.id = :aspirantId', { aspirantId: aspirantProfile.id })
         .andWhere('offer.id = :offerId', { offerId: jobOfferId })
@@ -129,7 +130,7 @@ export class ApplicationsService {
         .innerJoin('offer.company', 'company')
         .innerJoin('company.user', 'user')
         .where('user.id = :userId', { userId })
-        .leftJoinAndSelect('app.aspirant', 'aspirant') // Cargamos los datos del aspirante
+        .leftJoinAndSelect('app.aspirantProfile', 'aspirant') // Cargamos los datos del aspirante
         .leftJoinAndSelect('aspirant.user', 'aspirantUser') // Cargamos los datos del User del aspirante
         .getMany();
 
@@ -169,10 +170,10 @@ export class ApplicationsService {
     // 2. Aplicar Actualización y Guardar
     application.status = updateStatusDto.status;
     // Si se incluye una nota, la actualizamos. Asumimos que la entidad tiene el campo internalNote
-    if (updateStatusDto.internalNote) {
-      // Debes asegurarte de que la entidad Application tenga este campo
-      // application.internalNote = updateStatusDto.internalNote;
-    }
+    //if (updateStatusDto.internalNote) {
+    // asegurarse de que la entidad tenga este campo
+    // application.internalNote = updateStatusDto.internalNote;
+    //}
 
     try {
       return await this.applicationRepository.save(application);

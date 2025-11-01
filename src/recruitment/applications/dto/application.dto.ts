@@ -13,7 +13,7 @@ export class CreateApplicationDto {
   @IsNotEmpty()
   @IsInt()
   @Type(() => Number)
-  offerId: number;
+  jobOfferId: number;
 
   @IsOptional()
   @IsString()

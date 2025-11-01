@@ -1,28 +1,60 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { APP_GUARD } from '@nestjs/core';
+
+// Módulos de la Aplicación
+import { AuthModule } from './auth/auth.module';
 import { RecruitmentModule } from './recruitment/recruitment.module';
+
+// Guardias Globales
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { RolesGuard } from './auth/guards/roles.guard';
 
 @Module({
   imports: [
-    // Carga las variables de entorno del archivo .env
+    // 1. Configuración Global
     ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
+      isGlobal: true, // Hace que las variables de entorno estén disponibles en toda la app
     }),
-    // Configuración de la base de datos (Ejemplo usando TypeORM)
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      url: process.env.DATABASE_URL,
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true, // ¡Usar solo en desarrollo!
-      // logging: true,
+
+    // 2. Conexión a la Base de Datos
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres', // Cambia a 'mysql', 'sqlite', etc., según tu base de datos
+        host: configService.get<string>('DB_HOST'),
+        port: configService.get<number>('DB_PORT'),
+        username: configService.get<string>('DB_USERNAME'),
+        password: configService.get<string>('DB_PASSWORD'),
+        database: configService.get<string>('DB_DATABASE'),
+
+        // Carga automática de todas las entidades
+        autoLoadEntities: true,
+        // ¡Usar 'synchronize: true' solo en desarrollo!
+        synchronize: configService.get<string>('NODE_ENV') !== 'production',
+      }),
     }),
-    RecruitmentModule,
+
+    // 3. Módulos de Funcionalidad
+    AuthModule,
+    RecruitmentModule, // Este módulo debe importar todos los sub-módulos (Companies, Aspirants, Applications)
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [
+    // 4. Guardias JWT Globales
+    // Establecer JwtAuthGuard como un guard global, protegiendo todas las rutas por defecto.
+    // Solo las rutas marcadas con @Public() serán accesibles.
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    // Registrar RolesGuard globalmente (se ejecuta después de JwtAuthGuard)
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class AppModule {}

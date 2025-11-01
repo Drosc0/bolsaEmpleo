@@ -1,40 +1,28 @@
-import {
-  IsString,
-  IsEmail,
-  IsNotEmpty,
-  IsOptional,
-  IsUrl,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsUrl } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
 
+// DTO para crear el perfil inicial de la empresa
 export class CreateCompanyProfileDto {
   @IsNotEmpty()
   @IsString()
-  companyName: string;
-
-  @IsNotEmpty()
-  @IsEmail()
-  email: string;
+  name: string; // Nombre legal o comercial de la empresa
 
   @IsOptional()
   @IsString()
-  description?: string;
+  description?: string; // Descripción de la empresa
 
   @IsOptional()
   @IsUrl()
-  website?: string;
+  websiteUrl?: string; // Sitio web oficial
 
   @IsOptional()
-  @IsUrl()
-  logoUrl?: string;
+  @IsString()
+  address?: string; // Dirección principal o sede
 }
 
-export class UpdateCompanyProfileDto extends CreateCompanyProfileDto {
-  // Para la actualización, hacemos todos los campos opcionales
-  @IsOptional()
-  @IsString()
-  companyName?: string;
-
-  @IsOptional()
-  @IsEmail()
-  email?: string;
+// DTO para actualizar el perfil
+export class UpdateCompanyProfileDto extends PartialType(
+  CreateCompanyProfileDto,
+) {
+  // Hereda todos los campos como opcionales
 }

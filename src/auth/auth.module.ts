@@ -12,7 +12,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
-    // TypeOrmModule.forFeature([User]), // Registrar la entidad User
+    TypeOrmModule.forFeature([User]), // Registrar la entidad User
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

@@ -9,19 +9,18 @@ import {
   Param,
   ParseIntPipe,
 } from '@nestjs/common';
+import { Request } from 'express'; // Importar Request de Express
 import { ApplicationsService } from './applications.service';
 import {
   CreateApplicationDto,
   UpdateApplicationStatusDto,
 } from './dto/application.dto';
 import { Application } from './entities/application.entity';
-
 // Autenticación y Roles
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/auth/entities/user.entity';
-import { Request } from 'express'; // Importar Request de Express
 
 // Interfaz para tipar el objeto de solicitud con el usuario adjunto por el JwtAuthGuard
 interface CustomRequest extends Request {
@@ -88,7 +87,7 @@ export class ApplicationsController {
     return this.applicationsService.updateStatus(
       userId,
       applicationId,
-      updateStatusDto.status,
+      updateStatusDto,
     );
   }
 
@@ -102,7 +101,7 @@ export class ApplicationsController {
    */
   @Get('me')
   @Roles(UserRole.ASPIRANTE)
-  async findMyApplications(@Req() req: CustomRequest): Promise<Application[]> {
+  findMyApplications(@Req() req: CustomRequest): Promise<Application[]> {
     const userId = req.user.id;
     return this.applicationsService.findAllByAspirant(userId);
   }

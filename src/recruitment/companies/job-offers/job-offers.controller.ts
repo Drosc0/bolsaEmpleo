@@ -11,7 +11,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { JobOffersService } from './job-offers.service';
-import { CreateJobOfferDto, UpdateJobOfferDto } from '../dto/job-offer.dto';
+import { CreateJobOfferDto, UpdateJobOfferDto } from './dto/job-offer.dto';
 //autenticacion
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';

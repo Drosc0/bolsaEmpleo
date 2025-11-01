@@ -2,12 +2,13 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JobOffer } from './job-offer.entity';
 import { CompanyProfile } from '../entities/company-profile.entity';
-import { CreateJobOfferDto, UpdateJobOfferDto } from '../dto/job-offer.dto';
+import { CreateJobOfferDto, UpdateJobOfferDto } from './dto/job-offer.dto';
 
 @Injectable()
 export class JobOffersService {
@@ -100,7 +101,7 @@ export class JobOffersService {
 
     // 1. Verificación de propiedad: Asegurarse de que el usuario logueado sea el dueño de la empresa
     if (offer.company.userId !== userId) {
-      throw new BadRequestException(
+      throw new ForbiddenException(
         'No tienes permiso para modificar esta oferta.',
       );
     }

@@ -9,7 +9,7 @@ import {
   Delete,
 } from '@nestjs/common';
 import { ProfileService } from './profile.service';
-import { CreateProfileDto, UpdateProfileDto } from './profile.dto';
+import { CreateProfileDto, UpdateProfileDto } from '../dto/profile.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';

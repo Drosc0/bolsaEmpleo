@@ -6,10 +6,25 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeepPartial } from 'typeorm';
+
 import { AspirantProfile } from '../entities/aspirant-profile.entity';
-import { CreateProfileDto, UpdateProfileDto } from './profile.dto';
 import { ExperienceItem } from '../entities/experience-item.entity';
-import { SkillItem } from '../entities/skill-item.entity';
+import { SkillItem, SkillLevel } from '../entities/skill-item.entity';
+import {
+  CreateProfileDto,
+  UpdateProfileDto,
+  SkillItemDto,
+} from '../dto/profile.dto';
+
+// --- Función Auxiliar para mapear el nivel numérico a Enum/String ---
+const mapLevelToSkillLevel = (level: number): SkillLevel => {
+  if (level >= 5) return SkillLevel.EXPERT;
+  if (level >= 4) return SkillLevel.ADVANCED;
+  if (level >= 3) return SkillLevel.INTERMEDIATE;
+  if (level >= 2) return SkillLevel.BASIC;
+  return SkillLevel.NOVICE;
+};
+// -------------------------------------------------------------------
 
 @Injectable()
 export class ProfileService {
@@ -23,8 +38,7 @@ export class ProfileService {
   ) {}
 
   /**
-   * Busca un perfil de aspirante por el ID del usuario.
-   * Retorna null si no se encuentra.
+   * Busca un perfil de aspirante por el ID del usuario, cargando el CV.
    */
   async findByUserId(userId: number): Promise<AspirantProfile | null> {
     try {
@@ -41,7 +55,7 @@ export class ProfileService {
   }
 
   /**
-   * Crea un nuevo perfil de aspirante.
+   * Crea un nuevo perfil de aspirante, incluyendo colecciones anidadas.
    */
   async create(
     userId: number,
@@ -54,7 +68,7 @@ export class ProfileService {
       );
     }
 
-    // 1. Separar datos base de colecciones anidadas
+    // 1. Separar datos base de colecciones
     const { skills, experience, ...profileBaseData } = createProfileDto;
 
     const newProfileData: DeepPartial<AspirantProfile> = {
@@ -62,26 +76,32 @@ export class ProfileService {
       userId,
     };
 
-    // 2. Crear la entidad principal
     const newProfile = this.profileRepository.create(newProfileData);
 
     try {
-      // 3. Crear y asignar las entidades de relación (transformando DTOs)
+      // 2. Crear y asignar las entidades de relación
       if (skills) {
-        newProfile.skills = skills.map((sDto) =>
-          this.skillRepository.create({ ...sDto, profile: newProfile }),
-        );
+        newProfile.skills = skills.map((sDto: SkillItemDto) => {
+          const skillEntityData = {
+            skillName: sDto.name, // Mapeo de nombre
+            level: mapLevelToSkillLevel(sDto.level), // Mapeo de nivel
+          };
+          return this.skillRepository.create({
+            ...skillEntityData,
+            profile: newProfile,
+          });
+        });
       }
       if (experience) {
         newProfile.experience = experience.map((eDto) =>
-          this.experienceRepository.create({ ...eDto, profile: newProfile }),
+          this.experienceRepository.create({
+            ...eDto,
+            profile: newProfile,
+          }),
         );
       }
 
-      // 4. Guardar la entidad (TypeORM maneja la inserción en cascada)
       await this.profileRepository.save(newProfile);
-
-      // 5. Devolver el perfil guardado con las relaciones cargadas
       return (await this.findByUserId(userId)) as AspirantProfile;
     } catch (error) {
       console.error('Error al guardar el nuevo perfil de aspirante:', error);
@@ -107,19 +127,30 @@ export class ProfileService {
     }
 
     try {
-      // Aplicar el DTO a la entidad.
-      this.profileRepository.merge(profileToUpdate, updateProfileDto);
+      // 1. Separar colecciones anidadas para evitar error de tipado en merge
+      const { skills, experience, ...profileBaseData } = updateProfileDto;
+      this.profileRepository.merge(profileToUpdate, profileBaseData);
 
-      // Manejo de colecciones anidadas: Borrar las viejas y recrear si se proporcionan datos
-      if (updateProfileDto.skills) {
+      // 2. Manejo de colecciones: Borrar y recrear
+      if (skills) {
         await this.skillRepository.delete({ profile: profileToUpdate });
-        profileToUpdate.skills = updateProfileDto.skills.map((s) =>
-          this.skillRepository.create({ ...s, profileId: profileToUpdate.id }),
-        );
+
+        profileToUpdate.skills = skills.map((s: SkillItemDto) => {
+          const skillEntityData = {
+            skillName: s.name,
+            level: mapLevelToSkillLevel(s.level),
+          };
+          return this.skillRepository.create({
+            ...skillEntityData,
+            profileId: profileToUpdate.id,
+          });
+        });
       }
-      if (updateProfileDto.experience) {
-        await this.experienceRepository.delete({ profile: profileToUpdate });
-        profileToUpdate.experience = updateProfileDto.experience.map((e) =>
+      if (experience) {
+        await this.experienceRepository.delete({
+          profile: profileToUpdate,
+        });
+        profileToUpdate.experience = experience.map((e) =>
           this.experienceRepository.create({
             ...e,
             profileId: profileToUpdate.id,
@@ -127,8 +158,6 @@ export class ProfileService {
         );
       }
       await this.profileRepository.save(profileToUpdate);
-
-      // Devolver la versión actualizada y completa
       return (await this.findByUserId(userId)) as AspirantProfile;
     } catch (error) {
       console.error('Error al actualizar el perfil del aspirante:', error);
@@ -152,7 +181,6 @@ export class ProfileService {
 
     try {
       await this.profileRepository.delete(profileToDelete.id);
-
       return {
         success: true,
         message: 'Perfil de aspirante eliminado exitosamente.',
