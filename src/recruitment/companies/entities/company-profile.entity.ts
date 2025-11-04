@@ -24,13 +24,14 @@ export class CompanyProfile {
   @Column({ type: 'text', nullable: true })
   description: string | null;
 
-  @Column({ length: 255, nullable: true })
+  // ✅ CORRECCIÓN CLAVE: Se especifica 'varchar' para evitar el error "DataTypeNotSupportedError: Object"
+  @Column({ type: 'varchar', length: 255, nullable: true })
   website: string | null;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   logoUrl: string | null;
 
-  // 1. Relación 1:1 con el Usuario (CORRECCIÓN CLAVE)
+  // 1. Relación 1:1 con el Usuario (Foreign Key)
   @Column({ unique: true })
   userId: number;
 

@@ -16,34 +16,35 @@ export class AspirantProfile {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 100 })
+  @Column({ type: 'varchar', length: 100 }) // <-- Añadido 'type: 'varchar'
   firstName: string;
 
-  @Column({ length: 100 })
+  @Column({ type: 'varchar', length: 100 }) // <-- Añadido 'type: 'varchar'
   lastName: string;
 
-  @Column({ length: 100, unique: true })
+  @Column({ type: 'varchar', length: 100, unique: true }) // <-- Añadido 'type: 'varchar'
   email: string;
 
-  @Column({ length: 20 })
+  @Column({ type: 'varchar', length: 20 }) // <-- Añadido 'type: 'varchar'
   phone: string;
 
   @Column({ type: 'text', nullable: true })
   bio: string | null;
 
-  @Column({ length: 255, nullable: true })
+  // ✅ CORRECCIÓN CLAVE: Aplicamos 'type: varchar' para solucionar el error 'Object'
+  @Column({ type: 'varchar', length: 255, nullable: true })
   linkedinUrl: string | null;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   portfolioUrl: string | null;
 
-  @Column({ length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   currentJobTitle: string | null;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   photoUrl: string | null;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   cvUrl: string | null;
 
   // ===========
@@ -74,5 +75,5 @@ export class AspirantProfile {
 
   // 4. Relación 1:N con Postulaciones (CORRECCIÓN CLAVE)
   @OneToMany(() => Application, (application) => application.aspirantProfile)
-  applications: Application[]; // Propiedad 'applications' que resuelve el error
+  applications: Application[];
 }

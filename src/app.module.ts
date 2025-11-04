@@ -6,7 +6,6 @@ import { APP_GUARD } from '@nestjs/core';
 // Módulos de la Aplicación
 import { AuthModule } from './auth/auth.module';
 import { RecruitmentModule } from './recruitment/recruitment.module';
-//import { UserModule } from './user/user.module';
 
 // Guardias Globales
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
@@ -23,21 +22,28 @@ import { RolesGuard } from './auth/guards/roles.guard';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        url: configService.get<string>('DATABASE_URL'),
+      useFactory: (configService: ConfigService) => {
+        // 🛑 VERIFICACIÓN: Imprimir la URL antes de usarla
+        const dbUrl = configService.get<string>('DATABASE_URL');
+        console.log('🔗 [DB Config] URL de la Base de Datos leída:', dbUrl);
+        // 🛑 FIN DE VERIFICACIÓN
 
-        // Carga automática de todas las entidades
-        autoLoadEntities: true,
+        return {
+          type: 'postgres',
+          url: dbUrl, // Usamos la variable de la URL completa
 
-        synchronize: configService.get<string>('NODE_ENV') !== 'production',
+          // Carga automática de todas las entidades
+          autoLoadEntities: true,
 
-        // Configuración de SSL/TLS para conexiones externas (como Supabase)
-        ssl:
-          configService.get<string>('NODE_ENV') === 'production'
-            ? { rejectUnauthorized: false }
-            : false,
-      }),
+          synchronize: configService.get<string>('NODE_ENV') !== 'production',
+
+          // Configuración de SSL/TLS para conexiones externas (como Supabase)
+          ssl:
+            configService.get<string>('NODE_ENV') === 'production'
+              ? { rejectUnauthorized: false }
+              : false,
+        };
+      },
     }),
 
     // 3. Módulos de Funcionalidad
@@ -47,12 +53,10 @@ import { RolesGuard } from './auth/guards/roles.guard';
   controllers: [],
   providers: [
     // 4. Guardias JWT Globales
-    // JwtAuthGuard: Protege todas las rutas por defecto (se debe usar @Public() para rutas públicas)
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
-    // RolesGuard: Se ejecuta después de JwtAuthGuard para verificar los roles de usuario
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
