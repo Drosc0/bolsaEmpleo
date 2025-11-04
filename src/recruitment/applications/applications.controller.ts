@@ -20,7 +20,7 @@ import { Application } from './entities/application.entity';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
-import { UserRole } from 'src/auth/entities/user.entity';
+import { UserRole } from 'src/user/user.entity';
 
 // Interfaz para tipar el objeto de solicitud con el usuario adjunto por el JwtAuthGuard
 interface CustomRequest extends Request {

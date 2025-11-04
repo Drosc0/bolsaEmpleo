@@ -5,7 +5,7 @@ import {
   MinLength,
   IsEnum,
 } from 'class-validator';
-import { UserRole } from '../entities/user.entity';
+import { UserRole } from '../../user/user.entity';
 
 export class RegisterDto {
   @IsNotEmpty()

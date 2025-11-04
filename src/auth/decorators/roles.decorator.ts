@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import { UserRole } from '../entities/user.entity';
+import { UserRole } from '../../user/user.entity';
 
 // Clave usada por el RolesGuard para buscar los metadatos
 export const ROLES_KEY = 'roles';

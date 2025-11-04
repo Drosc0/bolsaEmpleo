@@ -7,7 +7,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 
-import { User } from '../../../auth/entities/user.entity';
+import { User } from '../../../user/user.entity';
 import { JobOffer } from '../job-offers/job-offer.entity';
 
 @Entity('company_profiles')

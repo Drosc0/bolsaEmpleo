@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne } from 'typeorm';
 
-import { AspirantProfile } from '../../recruitment/aspirants/entities/aspirant-profile.entity';
-import { CompanyProfile } from '../../recruitment/companies/entities/company-profile.entity';
+import { AspirantProfile } from '../recruitment/aspirants/entities/aspirant-profile.entity';
+import { CompanyProfile } from '../recruitment/companies/entities/company-profile.entity';
 
 export enum UserRole {
   ASPIRANTE = 'aspirante',
