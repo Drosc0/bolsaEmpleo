@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { User } from './entities/user.entity';
+import { User } from '../user/user.entity';
 import { RegisterDto, LoginDto } from './dto/auth.dto';
 
 @Injectable()
@@ -39,6 +39,7 @@ export class AuthService {
       password: hashedPassword,
       role,
     });
+    // Se asume que el 'companyName' (si aplica) se maneja en el DTO o en lógica posterior
     await this.usersRepository.save(newUser);
 
     return { message: 'Registro exitoso. Ahora puedes iniciar sesión.' };
@@ -65,6 +66,8 @@ export class AuthService {
       email: user.email,
       sub: user.id,
       role: user.role, // Incluir el rol en el token
+      // Puedes incluir companyName aquí si está en la entidad User y es necesario en el front
+      // companyName: user.companyName,
     };
 
     return {
@@ -72,24 +75,36 @@ export class AuthService {
     };
   }
 
-  // Utilidad para la estrategia JWT: buscar usuario por ID
-  async validateUser(email: string, password: string): Promise<User | null> {
-    // 1. Buscar el usuario por email
-    const user = await this.usersRepository.findOne({ where: { email } });
+  // Utilizado por JwtStrategy: busca un usuario basándose únicamente en el ID (sub)
+  async getUserByIdForJwt(id: number): Promise<User | null> {
+    const user = await this.usersRepository.findOneBy({ id });
 
     if (!user) {
       return null; // Usuario no encontrado
     }
 
-    // 2. Comparar la contraseña hasheada (usando bcrypt, etc.)
-    const isPasswordValid = await bcrypt.compare(password, user.password); // Asumo bcrypt
+    // Devolver el usuario excluyendo la contraseña
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...result } = user;
+    return result as User;
+  }
 
-    if (!isPasswordValid) {
-      return null; // Contraseña incorrecta
+  async validateLocalUser(
+    email: string,
+    password: string,
+  ): Promise<User | null> {
+    const user = await this.usersRepository.findOne({ where: { email } });
+
+    if (!user) {
+      return null;
     }
 
-    // 3. Si es válido, devolver el usuario (sin el hash de la contraseña)
-    // Usar una copia del objeto o seleccionar solo las propiedades necesarias
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return null;
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...result } = user;
     return result as User;
