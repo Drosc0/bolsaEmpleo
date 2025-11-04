@@ -6,6 +6,7 @@ import { APP_GUARD } from '@nestjs/core';
 // Módulos de la Aplicación
 import { AuthModule } from './auth/auth.module';
 import { RecruitmentModule } from './recruitment/recruitment.module';
+//import { UserModule } from './user/user.module';
 
 // Guardias Globales
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
@@ -13,44 +14,45 @@ import { RolesGuard } from './auth/guards/roles.guard';
 
 @Module({
   imports: [
-    // 1. Configuración Global
+    // 1. Configuración Global (Lee el .env)
     ConfigModule.forRoot({
-      isGlobal: true, // Hace que las variables de entorno estén disponibles en toda la app
+      isGlobal: true,
     }),
 
-    // 2. Conexión a la Base de Datos
+    // 2. Conexión a la Base de Datos (Usando DATABASE_URL)
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        type: 'postgres', // Cambia a 'mysql', 'sqlite', etc., según tu base de datos
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_DATABASE'),
+        type: 'postgres',
+        url: configService.get<string>('DATABASE_URL'),
 
         // Carga automática de todas las entidades
         autoLoadEntities: true,
-        // ¡Usar 'synchronize: true' solo en desarrollo!
+
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
+
+        // Configuración de SSL/TLS para conexiones externas (como Supabase)
+        ssl:
+          configService.get<string>('NODE_ENV') === 'production'
+            ? { rejectUnauthorized: false }
+            : false,
       }),
     }),
 
     // 3. Módulos de Funcionalidad
     AuthModule,
-    RecruitmentModule, // Este módulo debe importar todos los sub-módulos (Companies, Aspirants, Applications)
+    RecruitmentModule,
   ],
   controllers: [],
   providers: [
     // 4. Guardias JWT Globales
-    // Establecer JwtAuthGuard como un guard global, protegiendo todas las rutas por defecto.
-    // Solo las rutas marcadas con @Public() serán accesibles.
+    // JwtAuthGuard: Protege todas las rutas por defecto (se debe usar @Public() para rutas públicas)
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
-    // Registrar RolesGuard globalmente (se ejecuta después de JwtAuthGuard)
+    // RolesGuard: Se ejecuta después de JwtAuthGuard para verificar los roles de usuario
     {
       provide: APP_GUARD,
       useClass: RolesGuard,

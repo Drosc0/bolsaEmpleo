@@ -3,6 +3,13 @@
 /node_modules
 /build
 
+# Archivos de Node
+node_modules
+
+# Archivos de NestJS
+dist
+.tsbuildinfo
+
 # Logs
 logs
 *.log
