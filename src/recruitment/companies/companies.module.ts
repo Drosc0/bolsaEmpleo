@@ -1,32 +1,22 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+// ✅ Importar el nuevo módulo de Usuario
+import { UserModule } from '../../user/user.module';
+
 // Perfil de la Empresa
 import { CompanyProfile } from './entities/company-profile.entity';
-import { CompanyProfileService } from './profile/company-profile.service';
 import { CompanyProfileController } from './profile/company-profile.controller';
-
-// Ofertas de Trabajo
-import { JobOffer } from './job-offers/job-offer.entity';
-import { JobOffersService } from './job-offers/job-offers.service';
 import { JobOffersController } from './job-offers/job-offers.controller';
+import { CompanyProfileService } from './profile/company-profile.service';
+import { JobOffersService } from './job-offers/job-offers.service';
+import { JobOffer } from './job-offers/job-offer.entity';
+// ... otros imports
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      CompanyProfile,
-      JobOffer, // Incluir la entidad de ofertas aquí
-    ]),
-  ],
-  controllers: [
-    CompanyProfileController,
-    JobOffersController, // Rutas para /job-offers
-  ],
+  imports: [TypeOrmModule.forFeature([CompanyProfile, JobOffer]), UserModule],
+  controllers: [CompanyProfileController, JobOffersController],
   providers: [CompanyProfileService, JobOffersService],
-  exports: [
-    CompanyProfileService,
-    JobOffersService,
-    TypeOrmModule, // Importante para que ApplicationsModule pueda inyectar JobOffer
-  ],
+  exports: [CompanyProfileService, JobOffersService, TypeOrmModule],
 })
 export class CompaniesModule {}
