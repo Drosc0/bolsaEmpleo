@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-// ✅ Importar el nuevo módulo de Usuario
+// Importar el nuevo módulo de Usuario
 import { UserModule } from '../../user/user.module';
 
 // Perfil de la Empresa

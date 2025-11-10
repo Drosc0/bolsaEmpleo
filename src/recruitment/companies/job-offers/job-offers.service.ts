@@ -19,9 +19,7 @@ export class JobOffersService {
     private companyProfileRepository: Repository<CompanyProfile>,
   ) {}
 
-  // =========================================================================
   // LÓGICA DE GESTIÓN DE OFERTAS
-  // =========================================================================
 
   /**
    * Obtiene todas las ofertas de empleo (visible para aspirantes).
@@ -49,9 +47,7 @@ export class JobOffersService {
     return offer;
   }
 
-  // =========================================================================
   // LÓGICA EXCLUSIVA PARA EMPRESAS
-  // =========================================================================
 
   /**
    * Crea una nueva oferta de trabajo.

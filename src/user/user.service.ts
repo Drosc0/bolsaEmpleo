@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm'; // Ajusta según tu ORM (TypeORM, Mongoose, Prisma, etc.)
-import { Repository } from 'typeorm'; // Ajusta según tu ORM
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { User } from './user.entity';
 
 @Injectable()

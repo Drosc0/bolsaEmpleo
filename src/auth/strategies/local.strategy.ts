@@ -22,7 +22,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
    * @returns El objeto User si las credenciales son válidas.
    */
   async validate(email: string, password: string): Promise<User> {
-    // ✅ CORRECCIÓN: Llamada al método renombrado en AuthService
+    //CORRECCIÓN: Llamada al método renombrado en AuthService
     const user = await this.authService.validateLocalUser(email, password);
 
     if (!user) {
