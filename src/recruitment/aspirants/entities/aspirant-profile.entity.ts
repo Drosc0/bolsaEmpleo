@@ -16,22 +16,21 @@ export class AspirantProfile {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 100 }) // <-- Añadido 'type: 'varchar'
+  @Column({ type: 'varchar', length: 100, nullable: true }) // <-- Añadido 'type: 'varchar'
   firstName: string;
 
-  @Column({ type: 'varchar', length: 100 }) // <-- Añadido 'type: 'varchar'
+  @Column({ type: 'varchar', length: 100, nullable: true }) // <-- Añadido 'type: 'varchar'
   lastName: string;
 
-  @Column({ type: 'varchar', length: 100, unique: true }) // <-- Añadido 'type: 'varchar'
+  @Column({ type: 'varchar', length: 100, unique: true })
   email: string;
 
-  @Column({ type: 'varchar', length: 20 }) // <-- Añadido 'type: 'varchar'
+  @Column({ type: 'varchar', length: 20, nullable: true }) // <-- Añadido 'type: 'varchar'
   phone: string;
 
   @Column({ type: 'text', nullable: true })
   bio: string | null;
 
-  // ✅ CORRECCIÓN CLAVE: Aplicamos 'type: varchar' para solucionar el error 'Object'
   @Column({ type: 'varchar', length: 255, nullable: true })
   linkedinUrl: string | null;
 

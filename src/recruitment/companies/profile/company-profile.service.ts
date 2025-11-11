@@ -24,9 +24,29 @@ export class CompanyProfileService {
     private userRepository: Repository<User>,
   ) {}
 
-  // =========================================================================
   // LÓGICA DE CREACIÓN Y GESTIÓN
-  // =========================================================================
+
+  /**
+   * Crea un perfil de empresa vacío usando solo el objeto User.
+   * Esto satisface la restricción OneToOne inmediatamente después del registro.
+   */
+  async createDefault(user: User): Promise<CompanyProfile> {
+    try {
+      // Creamos la entrada de perfil solo con la FK y datos por defecto
+      const newProfile = this.companyProfileRepository.create({
+        userId: user.id, // Aquí puedes añadir cualquier campo NO NULO de CompanyProfile con un valor por defecto.
+        // Si 'name' o 'description' es NOT NULL, debes asignarles un string vacío ('') o un valor placeholder.
+        // Ejemplo si 'name' fuera obligatorio: name: 'Nueva Empresa',
+      });
+
+      return await this.companyProfileRepository.save(newProfile);
+    } catch (error) {
+      console.error('Error al crear el perfil de empresa por defecto:', error);
+      throw new InternalServerErrorException(
+        'Fallo al inicializar el perfil de la empresa.',
+      );
+    }
+  }
 
   /**
    * Crea el perfil de la empresa.

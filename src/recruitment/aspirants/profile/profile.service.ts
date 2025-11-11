@@ -15,6 +15,7 @@ import {
   UpdateProfileDto,
   SkillItemDto,
 } from '../dto/profile.dto';
+import { User } from 'src/user/user.entity';
 
 // --- Función Auxiliar para mapear el nivel numérico a Enum/String ---
 const mapLevelToSkillLevel = (level: number): SkillLevel => {
@@ -24,7 +25,6 @@ const mapLevelToSkillLevel = (level: number): SkillLevel => {
   if (level >= 2) return SkillLevel.BASIC;
   return SkillLevel.NOVICE;
 };
-// -------------------------------------------------------------------
 
 @Injectable()
 export class ProfileService {
@@ -36,6 +36,32 @@ export class ProfileService {
     @InjectRepository(SkillItem)
     private skillRepository: Repository<SkillItem>,
   ) {}
+
+  /**
+   * Crea un perfil vacío usando solo el objeto User.
+   * Esto satisface la restricción OneToOne inmediatamente después del registro.
+   */
+  async createDefault(user: User): Promise<AspirantProfile> {
+    try {
+      // Creamos la entrada de perfil solo con la FK y datos por defecto (si los hay)
+      const newProfile = this.profileRepository.create({
+        userId: user.id,
+        email: user.email,
+        // Añade aquí cualquier otro campo NO NULO que deba tener un valor por defecto.
+        // Ej: phone: null, city: null, etc.
+      });
+
+      return await this.profileRepository.save(newProfile);
+    } catch (error) {
+      console.error(
+        'Error al crear el perfil de aspirante por defecto:',
+        error,
+      );
+      throw new InternalServerErrorException(
+        'Fallo al inicializar el perfil del aspirante.',
+      );
+    }
+  }
 
   /**
    * Busca un perfil de aspirante por el ID del usuario, cargando el CV.

@@ -9,7 +9,9 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../user/user.entity';
 import { RegisterDto, LoginDto } from './dto/auth.dto';
-import { UserRole } from '../user/user.entity'; // Asegúrate de importar UserRole si es necesario
+import { UserRole } from '../user/user.entity';
+import { ProfileService } from '../recruitment/aspirants/profile/profile.service';
+import { CompanyProfileService } from '../recruitment/companies/profile/company-profile.service';
 
 // Definir la interfaz de respuesta que incluye los campos necesarios para el frontend
 interface AuthResult {
@@ -24,6 +26,8 @@ export class AuthService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private jwtService: JwtService,
+    private readonly aspirantProfileService: ProfileService,
+    private readonly companyProfileService: CompanyProfileService,
   ) {}
 
   // --- REGISTRO (MODIFICADO para devolver token y datos de sesión) ---
@@ -47,21 +51,54 @@ export class AuthService {
       password: hashedPassword,
       role,
     });
-    const savedUser = await this.usersRepository.save(newUser);
 
-    // 4. Generar el token JWT y los datos de sesión para el frontend
-    const payload = {
-      email: savedUser.email,
-      sub: savedUser.id,
-      role: savedUser.role,
-    };
+    //  BLOQUE TRY/CATCH para capturar errores de TypeORM/FK
+    try {
+      const savedUser = await this.usersRepository.save(newUser);
 
-    return {
-      token: this.jwtService.sign(payload),
-      // Usamos 'id' de la entidad, pero lo mapeamos a 'userId' para el contrato del frontend
-      userId: savedUser.id,
-      role: savedUser.role,
-    };
+      // PASO CRÍTICO AÑADIDO: Crear el perfil asociado según el rol
+      if (savedUser.role === UserRole.ASPIRANTE) {
+        // Llama al servicio para crear una entrada de perfil por defecto
+        await this.aspirantProfileService.createDefault(savedUser);
+      } else if (savedUser.role === UserRole.EMPRESA) {
+        await this.companyProfileService.createDefault(savedUser);
+      }
+
+      // 4. Generar el token JWT y devolver la respuesta (Esto ya estaba bien)
+      const payload = {
+        email: savedUser.email,
+        sub: savedUser.id,
+        role: savedUser.role,
+      };
+
+      return {
+        token: this.jwtService.sign(payload),
+        userId: savedUser.id,
+        role: savedUser.role,
+      };
+    } catch (error: any) {
+      // 1. Loguea el error COMPLETO SÓLO si es grave (opcional, pero ayuda)
+      console.error('⚠️ [Error Crítico de BD en Registro]', error);
+
+      // 2. Intenta extraer el mensaje de detalle de PostgreSQL
+      let errorMessage: string =
+        'Fallo en la creación de usuario. Revise las restricciones de la BD.';
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (error && error.detail) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        errorMessage = error.detail;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      } else if (error && error.message) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        errorMessage = error.message;
+      }
+
+      // 3. Lanza la excepción al cliente con el detalle.
+      throw new BadRequestException(
+        `Fallo en la creación de usuario: ${errorMessage}`,
+      );
+    }
   }
 
   // --- LOGIN (MODIFICADO para devolver userId y role) ---

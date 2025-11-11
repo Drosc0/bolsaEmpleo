@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
+import * as path from 'path'; // 💡 NECESARIO para manejar rutas de migraciones
 
 // Módulos de la Aplicación
 import { AuthModule } from './auth/auth.module';
@@ -18,30 +19,38 @@ import { RolesGuard } from './auth/guards/roles.guard';
       isGlobal: true,
     }),
 
-    // 2. Conexión a la Base de Datos (Usando DATABASE_URL)
+    // 2. Conexión a la Base de Datos (TypeORM)
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        // 🛑 VERIFICACIÓN: Imprimir la URL antes de usarla
         const dbUrl = configService.get<string>('DATABASE_URL');
+        const isProd = configService.get<string>('NODE_ENV') === 'production';
+
         console.log('🔗 [DB Config] URL de la Base de Datos leída:', dbUrl);
-        // 🛑 FIN DE VERIFICACIÓN
 
         return {
           type: 'postgres',
-          url: dbUrl, // Usamos la variable de la URL completa
+          url: dbUrl,
 
           // Carga automática de todas las entidades
           autoLoadEntities: true,
 
-          synchronize: configService.get<string>('NODE_ENV') !== 'production',
+          // Sincronizar solo en desarrollo. En producción, usa migraciones.
+          synchronize: !isProd,
+
+          //CONFIGURACIÓN PARA MIGRACIONES
+          migrationsRun: false, // Nunca ejecutar migraciones automáticamente al iniciar
+          entities: [path.join(__dirname, '**/*.entity{.ts,.js}')], // Rutas de las entidades
+          migrations: [path.join(__dirname, 'migrations/*{.ts,.js}')], // Rutas de los archivos de migración
+
+          // Necesario para el CLI (comando 'typeorm')
+          cli: {
+            migrationsDir: 'src/migrations',
+          },
 
           // Configuración de SSL/TLS para conexiones externas (como Supabase)
-          ssl:
-            configService.get<string>('NODE_ENV') === 'production'
-              ? { rejectUnauthorized: false }
-              : false,
+          ssl: isProd ? { rejectUnauthorized: false } : false,
         };
       },
     }),

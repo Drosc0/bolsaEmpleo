@@ -15,7 +15,7 @@ export class CompanyProfile {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 255, unique: true })
+  @Column({ length: 255, nullable: true })
   companyName: string;
 
   @Column({ length: 100, unique: true })
@@ -24,7 +24,6 @@ export class CompanyProfile {
   @Column({ type: 'text', nullable: true })
   description: string | null;
 
-  // ✅ CORRECCIÓN CLAVE: Se especifica 'varchar' para evitar el error "DataTypeNotSupportedError: Object"
   @Column({ type: 'varchar', length: 255, nullable: true })
   website: string | null;
 

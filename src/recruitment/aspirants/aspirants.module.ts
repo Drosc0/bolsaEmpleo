@@ -32,3 +32,5 @@ import { SkillItemController } from './profile/skill-item.controller';
   ],
 })
 export class AspirantsModule {}
+
+export { ProfileService };
