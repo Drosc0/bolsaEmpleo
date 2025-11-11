@@ -9,6 +9,14 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../user/user.entity';
 import { RegisterDto, LoginDto } from './dto/auth.dto';
+import { UserRole } from '../user/user.entity'; // Asegúrate de importar UserRole si es necesario
+
+// Definir la interfaz de respuesta que incluye los campos necesarios para el frontend
+interface AuthResult {
+  token: string;
+  userId: number; // Asumiendo que el ID es un número (serial)
+  role: UserRole;
+}
 
 @Injectable()
 export class AuthService {
@@ -18,8 +26,8 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  // --- REGISTRO ---
-  async register(registerDto: RegisterDto): Promise<{ message: string }> {
+  // --- REGISTRO (MODIFICADO para devolver token y datos de sesión) ---
+  async register(registerDto: RegisterDto): Promise<AuthResult> {
     const { email, password, role } = registerDto;
 
     // 1. Verificar si el usuario ya existe
@@ -39,14 +47,25 @@ export class AuthService {
       password: hashedPassword,
       role,
     });
-    // Se asume que el 'companyName' (si aplica) se maneja en el DTO o en lógica posterior
-    await this.usersRepository.save(newUser);
+    const savedUser = await this.usersRepository.save(newUser);
 
-    return { message: 'Registro exitoso. Ahora puedes iniciar sesión.' };
+    // 4. Generar el token JWT y los datos de sesión para el frontend
+    const payload = {
+      email: savedUser.email,
+      sub: savedUser.id,
+      role: savedUser.role,
+    };
+
+    return {
+      token: this.jwtService.sign(payload),
+      // Usamos 'id' de la entidad, pero lo mapeamos a 'userId' para el contrato del frontend
+      userId: savedUser.id,
+      role: savedUser.role,
+    };
   }
 
-  // --- LOGIN ---
-  async login(loginDto: LoginDto): Promise<{ token: string }> {
+  // --- LOGIN (MODIFICADO para devolver userId y role) ---
+  async login(loginDto: LoginDto): Promise<AuthResult> {
     const { email, password } = loginDto;
 
     // 1. Buscar el usuario
@@ -65,13 +84,13 @@ export class AuthService {
     const payload = {
       email: user.email,
       sub: user.id,
-      role: user.role, // Incluir el rol en el token
-      // Puedes incluir companyName aquí si está en la entidad User y es necesario en el front
-      // companyName: user.companyName,
+      role: user.role,
     };
 
     return {
       token: this.jwtService.sign(payload),
+      userId: user.id, // Devolver el ID
+      role: user.role, // Devolver el rol
     };
   }
 

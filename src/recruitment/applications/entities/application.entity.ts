@@ -40,6 +40,9 @@ export class Application {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   appliedAt: Date;
 
+  @Column({ type: 'text', nullable: true })
+  internalNote: string | null;
+
   // --- RELACIONES N:1 ---
 
   // 1. Relación con el Perfil del Aspirante

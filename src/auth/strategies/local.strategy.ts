@@ -8,7 +8,6 @@ import { User } from 'src/user/user.entity'; // Asegúrate de que esta ruta sea 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(private authService: AuthService) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     super({
       // Usamos 'email' en lugar de 'username' por defecto para req.body
       usernameField: 'email',

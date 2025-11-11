@@ -169,11 +169,9 @@ export class ApplicationsService {
 
     // 2. Aplicar Actualización y Guardar
     application.status = updateStatusDto.status;
-    // Si se incluye una nota, la actualizamos. Asumimos que la entidad tiene el campo internalNote
-    //if (updateStatusDto.internalNote) {
-    // asegurarse de que la entidad tenga este campo
-    // application.internalNote = updateStatusDto.internalNote;
-    //}
+    if (updateStatusDto.internalNote) {
+      application.internalNote = updateStatusDto.internalNote;
+    }
 
     try {
       return await this.applicationRepository.save(application);

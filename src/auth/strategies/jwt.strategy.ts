@@ -33,7 +33,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * La validación exitosa devuelve el objeto User, el cual es adjuntado a req.user.
    */
   async validate(payload: JwtPayload): Promise<User> {
-    // ✅ CORRECCIÓN: Llamamos al método que busca al usuario usando solo el ID (payload.sub),
+    // Llamamos al método que busca al usuario usando solo el ID (payload.sub),
     // ya que la contraseña no se pasa en la estrategia JWT.
     const user = await this.authService.getUserByIdForJwt(payload.sub);
 
