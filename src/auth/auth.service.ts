@@ -30,7 +30,7 @@ export class AuthService {
     private readonly companyProfileService: CompanyProfileService,
   ) {}
 
-  // --- REGISTRO (MODIFICADO para devolver token y datos de sesión) ---
+  // --- REGISTRO (MODIFICADO para pasar email y companyName al perfil) ---
   async register(registerDto: RegisterDto): Promise<AuthResult> {
     const { email, password, role } = registerDto;
 
@@ -52,7 +52,6 @@ export class AuthService {
       role,
     });
 
-    //  BLOQUE TRY/CATCH para capturar errores de TypeORM/FK
     try {
       const savedUser = await this.usersRepository.save(newUser);
 
@@ -61,10 +60,15 @@ export class AuthService {
         // Llama al servicio para crear una entrada de perfil por defecto
         await this.aspirantProfileService.createDefault(savedUser);
       } else if (savedUser.role === UserRole.EMPRESA) {
-        await this.companyProfileService.createDefault(savedUser);
+        // Pasar el email y el nombre de la empresa
+        await this.companyProfileService.createDefault({
+          user: savedUser,
+          email: savedUser.email,
+          companyName: registerDto.companyName || savedUser.email, // El DTO debe asegurarse de que este campo exista
+        });
       }
 
-      // 4. Generar el token JWT y devolver la respuesta (Esto ya estaba bien)
+      // 4. Generar el token JWT y devolver la respuesta
       const payload = {
         email: savedUser.email,
         sub: savedUser.id,
@@ -77,10 +81,9 @@ export class AuthService {
         role: savedUser.role,
       };
     } catch (error: any) {
-      // 1. Loguea el error COMPLETO SÓLO si es grave (opcional, pero ayuda)
+      // Manejo de errores de BD/TypeORM
       console.error('⚠️ [Error Crítico de BD en Registro]', error);
 
-      // 2. Intenta extraer el mensaje de detalle de PostgreSQL
       let errorMessage: string =
         'Fallo en la creación de usuario. Revise las restricciones de la BD.';
 
@@ -94,7 +97,6 @@ export class AuthService {
         errorMessage = error.message;
       }
 
-      // 3. Lanza la excepción al cliente con el detalle.
       throw new BadRequestException(
         `Fallo en la creación de usuario: ${errorMessage}`,
       );

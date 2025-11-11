@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   MinLength,
   IsEnum,
+  IsOptional,
 } from 'class-validator';
 import { UserRole } from '../../user/user.entity';
 
@@ -21,6 +22,11 @@ export class RegisterDto {
   @IsNotEmpty()
   @IsEnum(UserRole)
   role: UserRole;
+
+  // Se hace opcional, ya que solo lo usan las empresas
+  @IsOptional()
+  @IsString()
+  companyName?: string;
 }
 
 export class LoginDto {

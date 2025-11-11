@@ -15,6 +15,13 @@ import {
   UpdateCompanyProfileDto,
 } from '../dto/company-profile.dto';
 
+// NUEVO: DTO interno para asegurar que se pasan todos los campos NOT NULL
+interface CreateDefaultCompanyProfileInternalDto {
+  user: User;
+  email: string; // CRÍTICO: Para satisfacer el NOT NULL
+  companyName: string; // CRÍTICO: Para satisfacer cualquier NOT NULL de nombre
+}
+
 @Injectable()
 export class CompanyProfileService {
   constructor(
@@ -27,20 +34,26 @@ export class CompanyProfileService {
   // LÓGICA DE CREACIÓN Y GESTIÓN
 
   /**
-   * Crea un perfil de empresa vacío usando solo el objeto User.
-   * Esto satisface la restricción OneToOne inmediatamente después del registro.
+   * Crea un perfil de empresa vacío usando el objeto User y campos críticos.
+   * Esto satisface la restricción OneToOne y las restricciones NOT NULL de la BD.
    */
-  async createDefault(user: User): Promise<CompanyProfile> {
+  async createDefault(
+    dto: CreateDefaultCompanyProfileInternalDto, //Usar el DTO interno
+  ): Promise<CompanyProfile> {
     try {
-      // Creamos la entrada de perfil solo con la FK y datos por defecto
+      // Creamos la entrada de perfil asignando los valores críticos
       const newProfile = this.companyProfileRepository.create({
-        userId: user.id, // Aquí puedes añadir cualquier campo NO NULO de CompanyProfile con un valor por defecto.
-        // Si 'name' o 'description' es NOT NULL, debes asignarles un string vacío ('') o un valor placeholder.
-        // Ejemplo si 'name' fuera obligatorio: name: 'Nueva Empresa',
+        userId: dto.user.id,
+        email: dto.email, // SOLUCIÓN: Asignar el email
+        companyName: dto.companyName || 'Nueva Empresa Registrada', // Asignar el nombre (o valor por defecto)
+        description:
+          'Perfil de empresa por defecto. Por favor, actualice su información.',
+        // Otros campos NOT NULL deben tener un valor por defecto ('') o un valor aquí.
       });
 
       return await this.companyProfileRepository.save(newProfile);
     } catch (error) {
+      // Si el error es una QueryFailedError, lo logueamos antes de relanzar
       console.error('Error al crear el perfil de empresa por defecto:', error);
       throw new InternalServerErrorException(
         'Fallo al inicializar el perfil de la empresa.',
@@ -82,10 +95,6 @@ export class CompanyProfileService {
       });
 
       const profile = await this.companyProfileRepository.save(newProfile);
-
-      // 4. Actualizar la relación OneToOne inversa en la entidad User (opcional, TypeORM maneja la mayoría de las veces)
-      // user.companyProfile = profile;
-      // await this.userRepository.save(user);
 
       return profile;
     } catch (error) {

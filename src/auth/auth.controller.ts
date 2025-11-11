@@ -37,6 +37,7 @@ export class AuthController {
    * MODIFICADO: Ahora devuelve el token, userId y role.
    */
   @Public()
+  @Post('login')
   @HttpCode(HttpStatus.OK) // Asegura que la respuesta sea 200 OK
   async login(@Body() loginDto: LoginDto): Promise<AuthClientResponse> {
     // El servicio ahora devuelve { token, userId, role }
